@@ -1,0 +1,6 @@
+* Programming Collective Intelligence
+** Making Recommendations
+*** Errata
+The author forgets to take the square root in the Euclidean distance
+metric.
+
