@@ -1,6 +1,11 @@
 * Programming Collective Intelligence
 ** Making Recommendations
 *** Errata
+**** Page 11
 The author forgets to take the square root in the Euclidean distance
 metric.
+**** Page 24
+Table of scores have swapped normalized values for Lady and Luck
+columns. (Note that the missing sqrt from before makes the given
+scores wrong in any case.)
 
