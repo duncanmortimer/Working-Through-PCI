@@ -1,5 +1,6 @@
 # A dictionary of movie critics and their ratings of a small set of
 # movies
+import os
 from math import sqrt
 from collections import defaultdict
 
@@ -89,7 +90,7 @@ def recommend(prefs, person, similarity=sim_pearson):
 
     recommendations = []
     for film in scores:
-        if prefs[person].get(film,True): continue
+        if film in prefs[person]: continue
         sim_sum = sum(sim for (sim, _) in scores[film] if sim > 0)
         score_sum = sum(sim*score for (sim, score) in scores[film] if sim > 0)
         if sim_sum:
@@ -131,3 +132,19 @@ def recommend_items(prefs, item_sim, user):
                    for item in sim_totals])
 
     return result
+
+def load_movielens(path='movielens'):
+    # Get film titles
+    movies = {}
+    for line in open(os.path.join(path, 'u.item')):
+        (id, title) = line.split('|')[0:2]
+        movies[id] = title
+
+    prefs = defaultdict(dict)
+    for line in open(os.path.join(path, 'u.data')):
+        (user, movie_id, rating, ts) = line.split('\t')[0:4]
+        prefs[user][movies[movie_id]] = float(rating)
+
+    return prefs
+
+

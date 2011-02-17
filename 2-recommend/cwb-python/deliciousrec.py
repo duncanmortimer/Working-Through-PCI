@@ -30,7 +30,7 @@ def get_ratings_for(users):
             all_items.add(url)
 
     # Fill in missing items with 0
-    # Is this necessary?
+    # TODO: Don't think we should do this.
     for ratings in user_ratings.values():
         for item in all_items:
             if item not in ratings:
