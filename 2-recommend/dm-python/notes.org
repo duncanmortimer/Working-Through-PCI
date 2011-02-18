@@ -77,7 +77,6 @@
       either of the two raters, then taking V_1 = sum_I R_1(I) b_I, and
       V_2 = sum_I R_2(I) b_I.  Then the cosine similarity is
       V_1.V_2/abs(V_1) abs(V_2).
-
 ** Recommendation:
 - Given a target rater U, we want to find suggest a list of items
   Suggest(U) that (1) U has not already rated and (2) are likely to be of
