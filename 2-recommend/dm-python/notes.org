@@ -1,0 +1,147 @@
+* Background theory
+- seminal paper: David Goldberg 1992, "Using collaborative filtering to
+  weave an information tapestry"
+- Collaborative filtering:
+  1) extract from a large set of "raters" a relevant subset that give
+     similar ratings to the target.
+  2) selects from the set of items a candidate list of items that have
+     been highly rated by that relevant subset of raters.
+  3) ranks this candidate list in order to offer suggestions to the target
+     rater.
+** Raters:
+- One possible mathematical formulation: We have a set of all items I, and
+  a "rating space" R (which is presumably some totally ordered set), and
+  each rater can be described as a partial function from I to R.
+  - i.e. it's not sufficient to represent a "rater" as a vector --- we
+    need partiality as "not-yet-rated" can't be represented as an element
+    in R (if we insist that R be totally ordered).
+  - one option in python: a "nested dictionary" - each key is the name
+    of a rater and the content of each key is a dictionary.  In these
+    "subdictionaries", each key is the name of an item, and the content
+    is some rating score for that item.
+  - Actually: I guess there is no need for R to be totally ordered; for
+    example, we might rate items along several dimensions, in which case R
+    can be given a canonical partial ordering, but not a total ordering.
+** Similarity Scores:
+- A "similarity score" is a function from pairs of raters to (again) a
+  totally ordered set (say, the real numbers RR).  The larger the score,
+  the more similar the pair of raters. (Is there any advantage in working
+  with a similarity score over a dissimilarity score?).
+  - i.e. s:(I->R)x(I->R)->RR
+  - are there any properties we'd want a well-defined similarity score to
+    have?
+    - for example, would we want a rater who is completely undefined to be
+      disimilar to every other rater?  or similar to every rater?
+    - if we have a pair of raters, one of whom is strictly more defined
+      than the other, but who both agree on the items for which they are
+      defined, would we want their similarity score to be identical, more,
+      or less similar to a pair of identical raters?
+    - should there be a maximum value for similarity? i.e. this would
+      obviously correspond to raters with identical tastes, but perhaps
+      identical, more defined raters should be given greater similarity
+      than identical, less defined raters?
+  - Some example similarity scores:
+    - metric based scores: if the rating space is a metric space, we can
+      calculate the distance between the ratings assigned by the two
+      raters to items for which they are both defined.  These distances
+      can then be combined (for example, by treating them as a vector, and
+      calculating its euclidean magnitude) to yield a "disimilarity score"
+      d; we might convert this to a similarity score by taking 1/(1+d),
+      which assigns identical-on-commonly-rated-items raters a similarity
+      score of 1.
+    - the Pearson correlation score: calculate the Pearson correlation
+      coefficient for the points defined by the commonly rated items.  I
+      think there may be conditions on the rating space required for this
+      to be a sensible score, but I'm not sure what they are off the top
+      of my head.  For example, if we give an item ratings along several
+      dimensions, then I think that straightforward calculation of the
+      pearson correlation coefficient would correspond to giving equal
+      importance to the different dimensions as far as similarity is
+      concerned --- however, perhaps the dimensions themselves should be
+      weighted according to importance for calculating similarity?
+    - The Tanimoto (or Jaccard) coefficient: to my understanding, this is
+      applied when the rating space R={1}; i.e. we either have that a
+      rater has given an item a rating (say, by tagging it on delicious),
+      or has not rated an item (i.e. this may be because the rater has not
+      seen the item, or because the rater hasn't deemed the item
+      interesting enough to tag --- we can't know in advance).  The score
+      is calculated by treating the items tagged by the two raters as sets
+      (say, S_1 and S_2), and then calculating the ratio between the
+      number of commonly tagged elements and the total number of tagged
+      elements: s = |S_1 /\ S_2| / |S_1 V S_2|.  If the sets are
+      identical, this will give 1, and will give a minimum value of 0.  A
+      completely undefined rater will have a score of 0.
+    - Cosine similarity: a generalisation of the Tanimoto coefficient to
+      items given a scalar rating.  Let V_1 and V_2 be the vectors defined
+      by assigning an independent basis vector b_I to each item I rated by
+      either of the two raters, then taking V_1 = sum_I R_1(I) b_I, and
+      V_2 = sum_I R_2(I) b_I.  Then the cosine similarity is
+      V_1.V_2/abs(V_1) abs(V_2).
+
+** Recommendation:
+- Given a target rater U, we want to find suggest a list of items
+  Suggest(U) that (1) U has not already rated and (2) are likely to be of
+  interest to U.
+- There are different strategies for doing this, with different tradeoffs
+  in terms of accuracy, robustness, computational resources required etc.
+  (Actually: the chapter doesn't say anything about accuracy and
+  robustness from my recollection --- but I suspect that these are
+  involved.  I guess we need a measure of "recommendation quality" to talk
+  about these sensibly?)
+- "User based recommendation":
+  - Outline:
+    - In this strategy, we calculate the similarity between the other
+      raters and the target rater --- that is, for each rater T /= U, we
+      calculate S(T,U), the similarity between T and U.
+    - Then, for every item not already rated by U, we estimate the rating
+      U might give that item by taking the weighted average of ratings
+      given by the other raters that have weighted that item, using the
+      similarity score S(T,U) as the (unnormalised) weighting.
+    - From this, we can then suggest those items receiving the top
+      estimated ratings as being "good" for U.
+  - Comments:
+    - Some issues with this recommendation strategy are that it won't deal
+      out of the box with non-scalar ratings --- i.e. for example, if we
+      rate along multiple dimensions, then we'd need to introduce an
+      auxiliary "weighting" to suggest which dimensions are most
+      important.  That said, this could be quite a useful tool --- for
+      example, if we wanted a funny movie, we might use different critics
+      to if we wanted a serious thought-provoking movie.  (I'd be unlikely
+      to listen to a critic who suggested that "inception" was thought
+      provoking, for example; but others might.)  An alternative way to
+      get past this potential issue would be to predict all the different
+      rating dimensions using this algorithm, and then use
+      majorisation-style sorting to rank the items obtained.
+    - as mentioned in the book, this requires a similarity score to be
+      calculated between the target, and each rater for every
+      recommendation made.  I'm not quite sure I followed the argument
+      about this being more computationally intensive, in general, than
+      item-based recommendation, however.  For example, I'd have thought
+      that raters' tastes would also vary fairly slowly, and the same
+      rater would be unlikely to change previous ratings?  So wouldn't the
+      same technique used to cut down computations for item-based sorting
+      work just as well here (i.e. cache the similarity scores for
+      users)?  Maybe I've picked up the wrong end of the stick on the
+      issue with this system.  I'll have another think about it once I've
+      read over item-based recommendations again.
+- "Item-based recommendation":
+** Extensions and questions
+- Would it be possible to assign an "expected quality" score to recommendations, based on the amount and quality of data available in making that recommendation?  For example, if a target has only rated one item, it's unlikely that user-based recommendation will yield a valuable result.  But item-based recommendation might be valuable.  In this case, we might want our user-based recommendation system to flag the results as "unreliable"?  Can we give a Bayesian algorithm for recommendation --- i.e. give a probability distribution over ratings for individual items?  Then "quality of recommendation" would automatically emerge as the peaked-ness of the distribution.  Presumably a naive-Bayes approach would work fine --- it's unlikely that we'd need a prior that expressed any possibility of correlations between ratings?  (And indeed: doing a quick google search gives lots, and lots, and lots of articles on Bayesian recommendation.  Also some critiques --- I'll be interested to read those.)
+- An interesting criticism from Huffington post: http://www.huffingtonpost.com/molly-shaw/turn-on-tune-in-drop-out-_b_75303.html
+  - one of the commenters: "I don't think Ms. Shaw is suggesting that we
+    never avail ourselves of this technology­, in fact, I'm quite sure she
+    isn't. Rather she is saying that in a world where you carry your
+    office in your pocket, even our leisure choices are being co-opted by
+    convenienc­e. Yes, we can always turn off our Tivos, and never use
+    iTunes, or stroll through bookstores with our eyes closed, but this
+    hardly seems practical or desirable. These advances have benefits that
+    extend beyond picking out stuff they think we'll like, they help us
+    access stuff we already know we like. What she is observing and
+    lamenting is that we no longer even really have the choice to have a
+    choice. There is something innately disturbing about an algorithm that
+    knows you better than you know yourself, but at the same time, it's
+    nice when it points you towards that movie or that band that you
+    didn't even know your life was missing. I don't think she's trying to
+    invalidate that feeling, rather, like every new technologi­cally
+    driven trend, we need to recognize what we've lost despite all we have
+    gained."
