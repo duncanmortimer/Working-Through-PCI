@@ -1,6 +1,19 @@
 import feedparser as fp
 import re
 
+class URLError(Exception):
+    """Exception raised for URLs that don't contain valid feeds.
+
+    Attributes:
+        url -- the URL on which the exception was raised.
+        msg -- explanation of the problem.
+    """
+    def __init__(self, url, msg):
+        self.url = url
+        self.msg = msg
+    def __str__(self):
+        return repr(self.url +": " +self.msg)
+
 def getWordCounts(url):
     """
     Given the URL of an RSS or Atom feed, extract each word appearing
@@ -10,6 +23,7 @@ def getWordCounts(url):
     title of the feed, and the word count dictionary.
     """
     feedData = fp.parse(url)
+    if feedData['status'] == 404: raise URLError(url, "404 Error.")
     wordCounts = {}
 
     for entry in feedData['entries']:
@@ -61,11 +75,14 @@ def processFeedFile(feedFile):
     for feedIndex in range(0,numFeeds):
         print "processing: "+ str(feedIndex + 1) +" of " + str(numFeeds) + " feeds."
         url = feeds[feedIndex].strip()
-        title, wc = getWordCounts(url)
-        wordCounts[title] = wc
-        for word, count in wc.items():
-            containWordCount.setdefault(word, 0)
-            containWordCount[word] += 1
+        try:
+            title, wc = getWordCounts(url)
+            wordCounts[title] = wc
+            for word, count in wc.items():
+                containWordCount.setdefault(word, 0)
+                containWordCount[word] += 1
+        except URLError as err:
+            print "Unable to parse " + err.url +": "+ err.msg
 
     return wordCounts, containWordCount
 
