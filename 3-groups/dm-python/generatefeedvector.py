@@ -30,6 +30,57 @@ class URLRedirectError(URLError):
     def __str__(self):
         return repr(str(self.status) + " Error: " + self.url +" redirects to " + self.href)
 
+class URLFailureError(URLError):
+    """Unable to access resource at URL for unknown reason.
+
+    Attributes:
+        url -- the URL on which the exception was raised.
+    """
+    def __init__(self, url, status):
+        self.url = url
+        self.status = status
+    def __str__(self):
+        return repr("URL Failure: " + self.url + "  Error status: " + self.status)
+
+class FeedError(Exception):
+    """Feed parsing did not provide required data.
+
+    Attributes:
+       url -- feed URL.
+       msg -- error message.
+    """
+    def __init__(self, url, msg):
+        self.url = url
+        self.msg = msg
+    def __str__(self):
+        return repr("Feed error on URL: " + self.url + " --- " + self.msg)
+
+def robustParse(url, nTries = 3):
+    """
+    robustParse(url, nTries = 3) -> feedparser.FeedParserDict
+
+    Attempts to download and parse the resource at URL as an atom or
+    RSS feed, using the feedparser library.  301 and 302 redirects are
+    followed; various other errors are handled by retrying nTries
+    times, failing with a URLError otherwise.
+    """
+
+    if nTries > 0:
+        fd = fp.parse(url)
+        if 'status' in fd:
+            if fd['status'] == 200: return fd
+            if fd['status'] == 404: raise URLNotFoundError(url)
+            if fd['status'] == 301 or fd['status'] == 302:
+                print "  redirecting..."
+                return robustParse(fd['href'], nTries)
+        else:
+            return robustParse(url, nTries-1)
+
+    # Never got a 200 status.
+    if 'status' in fd:
+        raise URLFailureError(url, str(fd['status']))
+    raise URLFailureError(url, "No status...")
+
 def getWordCounts(url):
     """
     Given the URL of an RSS or Atom feed, extract each word appearing
@@ -38,16 +89,27 @@ def getWordCounts(url):
     each word appears as the entry.  Return a tuple containing the
     title of the feed, and the word count dictionary.
     """
-    feedData = fp.parse(url)
-    if feedData['status'] == 404: raise URLNotFoundError(url)
-    if feedData['status'] == 301 or feedData['status'] == 302:
-        raise URLRedirectError(url, feedData['href'], feedData['status'])
+    feedData = robustParse(url)
+
+    # Check that the feed has the data we need in it...
+    print "'feed' field in feedData: " + str('feed' in feedData)
+    if not 'feed' in feedData: raise FeedError(url, "No 'feed' field.")
+
+    print "'title' field in feedData.feed: " + str('title' in feedData.feed)
+    if not 'title' in feedData['feed']: raise FeedError(url, "No feed title.")
+
     wordCounts = {}
 
     for entry in feedData['entries']:
         if 'summary' in entry: content = entry['summary']
-        else: content = entry['description']
-        rawWords = getWords(entry['title'] + ' ' + content)
+        elif 'description' in entry: content = entry['description']
+        else: raise FeedError(url, "Posts without summary or description.")
+
+        if 'title' in entry: title = entry['title']
+        else: title = ""
+
+        rawWords = getWords(title + ' ' + content)
+
         for word in rawWords:
             wordCounts.setdefault(word,0)
             wordCounts[word] += 1
@@ -101,7 +163,9 @@ def processFeedFile(feedFile):
                 containWordCount[word] += 1
         except URLNotFoundError as err:
             print err
-        except URLRedirectError as err:
+        except URLFailureError as err:
+            print err
+        except FeedError as err:
             print err
 
     return wordCounts, containWordCount
