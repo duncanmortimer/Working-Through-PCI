@@ -190,3 +190,25 @@ def filterWords(wordCounts, containWordCount, minFrac = 0.1, maxFrac = 0.5):
         if frac>minFrac and frac<maxFrac: wordList.append(word)
 
     return wordList
+
+def convertToTable(wordCounts, wordList):
+    """convertToTable(wordCounts, wordList) -> tab-separated text table
+
+    Returns a string representing a tab-separated table of the
+    word-count data.  The first row contains the list of words in
+    wordList.  The first column contains the blog titles.  Row i,
+    Column j contains the number of occurrences of word j in blog i.
+    """
+
+    tableString = [" "]
+
+    for word in wordList: tableString.extend(['\t', word])
+    tableString.append('\n')
+    for title, wc in wordCounts.items():
+        tableString.append(title)
+        for word in wordList:
+            if word in wc: tableString.extend(['\t', `wc[word]`])
+            else: tableString.extend(['\t',u'0'])
+        tableString.append('\n')
+
+    return ''.join(tableString)
