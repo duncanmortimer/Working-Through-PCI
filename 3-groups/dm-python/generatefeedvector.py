@@ -2,17 +2,33 @@ import feedparser as fp
 import re
 
 class URLError(Exception):
-    """Exception raised for URLs that don't contain valid feeds.
+    """Exception raised for URLs that don't contain valid feeds."""
+    pass
+
+class URLNotFoundError(URLError):
+    """Exception raised when the feed resource cannot be located.
 
     Attributes:
         url -- the URL on which the exception was raised.
-        msg -- explanation of the problem.
     """
-    def __init__(self, url, msg):
+    def __init__(self, url):
         self.url = url
-        self.msg = msg
     def __str__(self):
-        return repr(self.url +": " +self.msg)
+        return repr("404 Error: " + self.url +" not found")
+
+class URLRedirectError(URLError):
+    """Feed has been moved to a different URL.
+
+    Attributes:
+        url -- the URL on which the exception was raised.
+        href -- the location we're being redirected to.
+    """
+    def __init__(self, url, href, status):
+        self.url = url
+        self.href = href
+        self.status = status
+    def __str__(self):
+        return repr(str(self.status) + " Error: " + self.url +" redirects to " + self.href)
 
 def getWordCounts(url):
     """
@@ -23,7 +39,9 @@ def getWordCounts(url):
     title of the feed, and the word count dictionary.
     """
     feedData = fp.parse(url)
-    if feedData['status'] == 404: raise URLError(url, "404 Error.")
+    if feedData['status'] == 404: raise URLNotFoundError(url)
+    if feedData['status'] == 301 or feedData['status'] == 302:
+        raise URLRedirectError(url, feedData['href'], feedData['status'])
     wordCounts = {}
 
     for entry in feedData['entries']:
@@ -81,8 +99,10 @@ def processFeedFile(feedFile):
             for word, count in wc.items():
                 containWordCount.setdefault(word, 0)
                 containWordCount[word] += 1
-        except URLError as err:
-            print "Unable to parse " + err.url +": "+ err.msg
+        except URLNotFoundError as err:
+            print err
+        except URLRedirectError as err:
+            print err
 
     return wordCounts, containWordCount
 
