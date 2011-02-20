@@ -1,7 +1,7 @@
 from math import sqrt
 from numpy import mean
 
-def loadData(filename):
+def loadData(fileName):
     """loadData(fileName) -> rowNames, colNames, data
 
     Given a text file containing a tab-separated table of data to
@@ -37,7 +37,9 @@ def pearsonSimilarity(v1,v2):
 
     num = v1dotv2 - sumv1*sumv2/n
     den = sqrt((v1dotv1 - sumv1**2/n)*(v2dotv2 - sumv2**2/n))
-    return 1.0 - num/den
+    if den>0:
+        return 1.0 - num/den
+    else: return 0.0
 
 class bicluster:
     def __init__(self, vec, left=None, right=None, error=0.0, name=None):
