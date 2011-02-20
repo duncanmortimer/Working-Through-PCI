@@ -1,27 +1,50 @@
 from math import sqrt
 from numpy import mean
+import random
 from PIL import Image, ImageDraw
 
-def loadData(fileName):
-    """loadData(fileName) -> rowNames, colNames, data
+class bicluster:
+    def __init__(self, vec, left=None, right=None, error=0.0, name=None):
+        self.vec = vec
+        self.left = left
+        self.right = right
+        self.error = error
+        self.name = name
+    def __str__(self):
+        if self.left == None:
+            return str("-" + self.name)
+        else:
+            leftRep = str(self.left).splitlines()
+            rightRep = str(self.right).splitlines()
+            buildStr = ["-+" + leftRep[0]]
+            buildStr.extend([" |" + line for line in leftRep[1:]])
+            buildStr.append(" \\" + rightRep[0])
+            buildStr.extend(["  " + line for line in rightRep[1:]])
+            return '\n'.join(buildStr)
 
-    Given a text file containing a tab-separated table of data to
-    cluster, with the first row the names of the fields and first
-    column the names of the entities, return a matrix (represented as
-    a list of lists) of values, along with a list of entity and field
-    names.
-    """
-    f = file(fileName)
+class multicluster:
+    def __init__(self, vec, children=None, error = 0.0, name=None):
+        self.vec = vec
+        self.children = children
+        self.error = error
+        self.name = name
+    def __str__(self):
+        if self.children == None:
+            return str("-" + self.name)
+        else:
+            firstChildRep = str(self.children[0]).splitlines()
+            buildStr = ["-+" + firstChildRep[0]]
+            buildStr.extend([" |" + line for line in firstChildRep[1:]])
+            if len(self.children)==1: return '\n'.join(buildStr)
+            for child in self.children[1:-1]:
+                rep = str(child).splitlines()
+                buildStr.append(" +"+rep[0])
+                buildStr.extend([" |"+line for line in rep[1:]])
+            lastChildRep = str(self.children[-1]).splitlines()
+            buildStr.append(" \\"+lastChildRep[0])
+            buildStr.extend(["  "+line for line in lastChildRep[1:]])
+            return '\n'.join(buildStr)
 
-    colNames = f.readline().strip().split('\t')[1:]
-
-    rowNames = []
-    data = []
-    for line in f:
-        theData = line.strip().split('\t')
-        rowNames.append(theData[0])
-        data.append([float(d) for d in theData[1:]])
-    return rowNames, colNames, data
 
 def pearsonSimilarity(v1,v2):
     """
@@ -42,24 +65,6 @@ def pearsonSimilarity(v1,v2):
         return 1.0 - num/den
     else: return 0.0
 
-class bicluster:
-    def __init__(self, vec, left=None, right=None, error=0.0, name=None):
-        self.vec = vec
-        self.left = left
-        self.right = right
-        self.error = error
-        self.name = name
-    def __str__(self):
-        if self.left == None:
-            return str("-" + self.name)
-        else:
-            leftRep = str(self.left).splitlines()
-            rightRep = str(self.right).splitlines()
-            buildStr = ["-+" + leftRep[0]]
-            buildStr.extend([" |" + line for line in leftRep[1:]])
-            buildStr.append(" \\" + rightRep[0])
-            buildStr.extend(["  " + line for line in rightRep[1:]])
-            return '\n'.join(buildStr)
 
 def hierCluster(rowNames, data, distance=pearsonSimilarity, merge=lambda v1, v2: mean([v1,v2], 0)):
     """hierCluster(rowNames, data, distance=pearsonSimilarity) -> bicluster
@@ -174,3 +179,34 @@ def drawNode(draw, cluster, x, y, scaling):
         draw.line((x,y1,x+branchLength,y1), fill=(0,0,0))
         drawNode(draw, cluster.left, x+branchLength, y0, scaling)
         drawNode(draw, cluster.right, x+branchLength, y1, scaling)
+
+def kMeansCluster(rowNames, data, numClusters = 4, distance = pearsonSimilarity, merge = lambda dp:mean(dp,0)):
+    """kMeansCluster(rowNames, data, numClusters, distance, merge) -> multicluster
+
+    Performas K-Means clustering with numClusters clusters (default of
+    4), using the distance measure 'distance' (default is
+    pearsonSimilarity) using 'merge' to calculate the position of a
+    multicluster (default is the mean of the vectors of its children).
+    """
+
+
+def loadData(fileName):
+    """loadData(fileName) -> rowNames, colNames, data
+
+    Given a text file containing a tab-separated table of data to
+    cluster, with the first row the names of the fields and first
+    column the names of the entities, return a matrix (represented as
+    a list of lists) of values, along with a list of entity and field
+    names.
+    """
+    f = file(fileName)
+
+    colNames = f.readline().strip().split('\t')[1:]
+
+    rowNames = []
+    data = []
+    for line in f:
+        theData = line.strip().split('\t')
+        rowNames.append(theData[0])
+        data.append([float(d) for d in theData[1:]])
+    return rowNames, colNames, data
