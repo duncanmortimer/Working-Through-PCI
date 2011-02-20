@@ -4,7 +4,7 @@ import random
 from PIL import Image, ImageDraw
 
 class bicluster:
-    def __init__(self, vec, left=None, right=None, error=0.0, name=None):
+    def __init__(self, vec, left=None, right=None, error=0.0, name=""):
         self.vec = vec
         self.left = left
         self.right = right
@@ -23,7 +23,7 @@ class bicluster:
             return '\n'.join(buildStr)
 
 class multicluster:
-    def __init__(self, vec, children=None, error = 0.0, name=None):
+    def __init__(self, vec, children=None, error = 0.0, name=""):
         self.vec = vec
         self.children = children
         self.error = error
@@ -31,6 +31,8 @@ class multicluster:
     def __str__(self):
         if self.children == None:
             return str("-" + self.name)
+        elif len(self.children) == 0:
+            return "empty cluster"
         else:
             firstChildRep = str(self.children[0]).splitlines()
             buildStr = ["-+" + firstChildRep[0]]
@@ -180,14 +182,61 @@ def drawNode(draw, cluster, x, y, scaling):
         drawNode(draw, cluster.left, x+branchLength, y0, scaling)
         drawNode(draw, cluster.right, x+branchLength, y1, scaling)
 
-def kMeansCluster(rowNames, data, numClusters = 4, distance = pearsonSimilarity, merge = lambda dp:mean(dp,0)):
-    """kMeansCluster(rowNames, data, numClusters, distance, merge) -> multicluster
+def kMeansCluster(rowNames, data, numClusters = 4, distance = pearsonSimilarity, merge = lambda mc:mean([child.vec for child in mc],0), maxIters = 100):
+    """kMeansCluster(rowNames, data, numClusters, distance, merge, maxIters) -> multicluster
 
     Performas K-Means clustering with numClusters clusters (default of
     4), using the distance measure 'distance' (default is
     pearsonSimilarity) using 'merge' to calculate the position of a
     multicluster (default is the mean of the vectors of its children).
+
+    Keep iterating the k-Means algorithm until there are no changes in
+    cluster assignments or we reach maxIters (default = 100) iterations.
     """
+    # Calculate the range of values for each feature; needed in order
+    # to seed our cluster positions.
+    ranges = [(min([row[i] for row in data]),max([row[i] for row in data])) for i in range(len(data[0]))]
+
+    # Randomly initialise the positions of the numCluster clusters;
+    # these are simply represented as vectors of values throughout the
+    # function, and converted to multiclusters at the end.
+    clusters = [[
+        random.random()*(ranges[i][1]-ranges[i][0]) + ranges[i][0]
+        for i in range(len(data[0]))
+    ] for j in range(numClusters)]
+
+    # Construct the leaf clusters
+    leafs = [multicluster(row, name=title) for (row, title) in zip(data, rowNames)]
+
+    lastAssignment = None
+    for iter in range(maxIters):
+        print 'Iteration %d (max %d)' % (iter + 1, maxIters)
+        bestAssignment = [[] for i in range(numClusters)]
+
+        for leaf in leafs:
+            bestMatch = 0
+            bestd = distance(clusters[0], leaf.vec)
+            for i in range(1,numClusters):
+                d = distance(clusters[i], leaf.vec)
+                if d<bestd:
+                    bestMatch = i
+                    bestd = d
+            bestAssignment[bestMatch].append(leaf)
+
+        if bestAssignment == lastAssignment: break
+        lastAssignment = bestAssignment
+
+        newClusters = []
+        for cluster, kids in zip(clusters, bestAssignment):
+            if len(kids) == 0:
+                newCluster = cluster
+            else:
+                newCluster = merge(kids)
+            newClusters.append(newCluster)
+
+        clusters = newClusters
+    # construct and return the result as a list of multiclusters
+    return [multicluster(vec, children=kids) for (vec, kids) in zip(clusters, bestAssignment)]
 
 
 def loadData(fileName):
