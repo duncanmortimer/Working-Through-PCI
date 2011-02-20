@@ -1,5 +1,6 @@
 from math import sqrt
 from numpy import mean
+from PIL import Image, ImageDraw
 
 def loadData(fileName):
     """loadData(fileName) -> rowNames, colNames, data
@@ -109,3 +110,67 @@ def hierCluster(rowNames, data, distance=pearsonSimilarity, merge=lambda v1, v2:
         del clusters[leftInd]
         clusters.append(mergedCluster)
     return clusters[0]
+
+def getWidth(cluster):
+    """
+    The width of a cluster is 1 if it has no children, and is
+    otherwise the sum of the widths of its branches.
+    """
+    if cluster.left == None and cluster.right == None: return 1
+    return getWidth(cluster.left) + getWidth(cluster.right)
+
+def getDepth(cluster):
+    """
+    The depth of a cluster is 0 if it is a leaf, or cluster.error plus
+    the maximum depth of its children.
+    """
+    if cluster.left == None and cluster.right == None: return 0.0
+    return max(getDepth(cluster.left),getDepth(cluster.right)) + cluster.error
+
+def drawDendrogram(cluster, file="dendrogram.jpg"):
+    """
+    Given a cluster, outputs a dendrogram depiction of that cluster as
+    a jpg image.  The lengths of the lines depicting a pair of
+    children are proportional to the degree of dissimilarity between
+    the pair.
+    """
+
+    imageHeight = getWidth(cluster) * 20
+    imageWidth = 1200
+
+    clusterDepth = getDepth(cluster)
+
+    scaling = float(imageWidth-150)/clusterDepth
+
+    # Create a new image with a white background
+    img = Image.new('RGB',(imageWidth,imageHeight), (255,255,255))
+    draw = ImageDraw.Draw(img)
+
+    # Draw the dendrogram
+    draw.line((0,imageHeight/2,10,imageHeight/2), fill=(0,0,0))
+    drawNode(draw, cluster, 10, imageHeight/2, scaling)
+
+    # Save the image
+    img.save(file,'JPEG')
+
+def drawNode(draw, cluster, x, y, scaling):
+    """
+    Given a DrawImage 'draw', and cluster 'cluster', draw the
+    dendrogram representing the cluster with its root located at x,y.
+    """
+    if cluster.left == None and cluster.right == None:
+        # Draw a leaf node (i.e. just print the label)
+        draw.text((x+5,y-7),cluster.name,(0,0,0))
+    else:
+        # Draw a branch node
+        h1 = getWidth(cluster.left) * 20
+        h2 = getWidth(cluster.right) * 20
+        branchLength = cluster.error * scaling
+        y0 = y - h2/2
+        y1 = y + h1/2
+
+        draw.line((x,y0,x,y1), fill=(0,0,0))
+        draw.line((x,y0,x+branchLength,y0), fill=(0,0,0))
+        draw.line((x,y1,x+branchLength,y1), fill=(0,0,0))
+        drawNode(draw, cluster.left, x+branchLength, y0, scaling)
+        drawNode(draw, cluster.right, x+branchLength, y1, scaling)
