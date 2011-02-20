@@ -37,3 +37,22 @@ def pearsonSimilarity(v1,v2):
     num = v1dotv2 - sumv1*sumv2/n
     den = sqrt((v1dotv1 - sumv1**2/n)*(v2dotv2 - sumv2**2/n))
     return 1.0 - num/den
+
+class bicluster:
+    def __init__(self, vec, left=None, right=None, error=0.0, name=None):
+        self.vec = vec
+        self.left = left
+        self.right = right
+        self.error = error
+        self.name = name
+    def __str__(self):
+        if self.left == None:
+            return str("-" + self.name)
+        else:
+            leftRep = str(self.left).splitlines()
+            rightRep = str(self.right).splitlines()
+            buildStr = ["-+" + leftRep[0]]
+            buildStr.extend([" |" + line for line in leftRep[1:]])
+            buildStr.append(" \\" + rightRep[0])
+            buildStr.extend(["  " + line for line in rightRep[1:]])
+            return '\n'.join(buildStr)
