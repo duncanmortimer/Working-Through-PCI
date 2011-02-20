@@ -1,4 +1,5 @@
 from math import sqrt
+from numpy import mean
 
 def loadData(filename):
     """loadData(fileName) -> rowNames, colNames, data
@@ -56,3 +57,53 @@ class bicluster:
             buildStr.append(" \\" + rightRep[0])
             buildStr.extend(["  " + line for line in rightRep[1:]])
             return '\n'.join(buildStr)
+
+def hierCluster(rowNames, data, distance=pearsonSimilarity, merge=lambda v1, v2: mean([v1,v2], 0)):
+    """hierCluster(rowNames, data, distance=pearsonSimilarity) -> bicluster
+
+    Cluster 'data' (with rows corresponding to items with names
+    'rowNames') using the hierarchical clustering algorithm.  By
+    default, use the pearson similarity measure as the distance
+    measure, and clusters are merged by taking the pointwise mean of
+    their constituent data.
+    """
+
+    # The 'distances' dictionary is used to memoize the calculation of
+    # distances between clusters.
+    distances = {}
+
+    clusters = [bicluster(row, name=title) for (row, title) in
+                zip(data, rowNames)]
+
+    # We now repeatedly merge the nearest pair of clusters in
+    # 'clusters' until only one cluster remains
+    while len(clusters) > 1:
+        # find the closest pair of clusters:
+        nearestPair = (0,1)
+        nearestDistance = distance(clusters[0].vec, clusters[1].vec)
+
+        for i in range(len(clusters)):
+            for j in range(i+1, len(clusters)):
+                pairId = (id(clusters[i]), id(clusters[j]))
+
+                try:
+                    d = distances[pairId]
+                except KeyError:
+                    d = distance(clusters[i].vec,clusters[j].vec)
+                    distances[pairId] = d
+
+                if d<nearestDistance:
+                    nearestDistance = d
+                    nearestPair = (i,j)
+
+        # now have nearest pair of clusters; need to merge them
+        leftInd = nearestPair[0]
+        rightInd = nearestPair[1]
+
+        mergedCluster = bicluster(merge(clusters[leftInd].vec,clusters[rightInd].vec), left=clusters[leftInd], right=clusters[rightInd], error = nearestDistance)
+
+        # remove the nearest pair from the list of clusters
+        del clusters[rightInd]
+        del clusters[leftInd]
+        clusters.append(mergedCluster)
+    return clusters[0]
