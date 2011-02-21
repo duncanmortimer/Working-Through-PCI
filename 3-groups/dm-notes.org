@@ -1,0 +1,99 @@
+* To think about:
+** Dendrograms:
+- How do you actually read a dendrogram?
+** Data quality and quantity:
+- How much data do you need to be able to cluster reliably? (and what is the right way to phrase this question?) (based on "column clustering" section)
+** K-means clustering:
+- How do you choose how many clusters to make?  Can this be done automatically?  Can you do "hierarchical k-means" clustering?
+* Results:
+** Hierarchical clustering:
+*** Using Pearson similarity and averaging to merge:
+-+-+-GoFugYourself
+ | \-+-Celebrity Gossip | Entertainment News | Celebrity News | TMZ.com
+ |   \-+-Make: Online
+ |     \-+-Joi Ito's Web
+ |       \-+-Creating Passionate Users
+ |         \-+-+-+-SpikedHumor - Today's Videos and Pictures
+ |           | | \-plasticbag.org
+ |           | \-+-A Consuming Experience (full feed)
+ |           |   \-+-ProBlogger Blog Tips
+ |           |     \-+-Jeremy Zawodny's blog
+ |           |       \-+-Sifry's Alerts
+ |           |         \-+-+-Joho the Blog
+ |           |           | \-+-ongoing by Tim Bray
+ |           |           |   \-+-+-+-+-The Viral Garden
+ |           |           |     | | | \-Bloggers Blog: Blogging the Blogsphere
+ |           |           |     | | \-+-Mashable!
+ |           |           |     | |   \-+-+-John Battelle's Searchblog
+ |           |           |     | |     | \-+-Quick Online Tips
+ |           |           |     | |     |   \-+-Google Blogoscoped
+ |           |           |     | |     |     \-+-Matt Cutts: Gadgets, Google, and SEO
+ |           |           |     | |     |       \-+-Search Engine Roundtable
+ |           |           |     | |     |         \-+-The Official Google Blog
+ |           |           |     | |     |           \-+-Google Operating System
+ |           |           |     | |     |             \-Search Engine Watch Blog
+ |           |           |     | |     \-+-TechCrunch
+ |           |           |     | |       \-+-ReadWriteWeb
+ |           |           |     | |         \-+-Stepcase Lifehack
+ |           |           |     | |           \-+-Signal vs. Noise
+ |           |           |     | |             \-+-PaulStamatiou.com - Tech News, Reviews and Guides
+ |           |           |     | |               \-456 Berea Street
+ |           |           |     | \-+-+-Gothamist
+ |           |           |     |   | \-+-Lifehacker
+ |           |           |     |   |   \-+-The Steve Rubel Stream
+ |           |           |     |   |     \-+-Gizmodo
+ |           |           |     |   |       \-+-+-kottke.org
+ |           |           |     |   |         | \-+-The Superficial - Because You're Ugly
+ |           |           |     |   |         |   \-Gawker:
+ |           |           |     |   |         \-+-Autoblog
+ |           |           |     |   |           \-+-Download Squad
+ |           |           |     |   |             \-+-TUAW
+ |           |           |     |   |               \-+-Joystiq
+ |           |           |     |   |                 \-Engadget
+ |           |           |     |   \-+-Boing Boing
+ |           |           |     |     \-+-Techdirt
+ |           |           |     |       \-+-+-ScienceBlogs : Combined Feed
+ |           |           |     |         | \-Pharyngula
+ |           |           |     |         \-+-Little Green Footballs
+ |           |           |     |           \-+-Derek Powazek
+ |           |           |     |             \-+-Neil Gaiman's Journal
+ |           |           |     |               \-WWdN: In Exile
+ |           |           |     \-+-Publishing 2.0
+ |           |           |       \-BuzzMachine
+ |           |           \-+-we make money not art
+ |           |             \-How to Change the World
+ |           \-+-blog maverick
+ |             \-+-+-SimpleBits
+ |               | \-flagrantdisregard
+ |               \-+-+-Scobleizer
+ |                 | \-Wired Top Stories
+ |                 \-+-+-+-gapingvoid
+ |                   | | \-Seth's Blog
+ |                   | \-+-Oilman
+ |                   |   \-mezzoblue
+ |                   \-+-+-Topix Blog
+ |                     | \-Copyblogger
+ |                     \-+-Joel on Software
+ |                       \-+-Steve Pavlina's Personal Development Blog
+ |                         \-+-Online Marketing Report
+ |                           \-Shoemoney - Skills To Pay The Bills
+ \-+-+-Eschaton
+   | \-+-+-Michelle Malkin
+   |   | \-+-The Full Feed from HuffingtonPost.com
+   |   |   \-+-Hot Air » Top Picks
+   |   |     \-+-Talking Points Memo
+   |   |       \-+-Crooks and Liars
+   |   |         \-+-Instapundit
+   |   |           \-+-Power Line
+   |   |             \-+-Daily Kos
+   |   |               \-ThinkProgress
+   |   \-+-+-MetaFilter
+   |     | \-+-Captain's Quarters
+   |     |   \-+-Slashdot
+   |     |     \-TreeHugger
+   |     \-+-+-Wonkette
+   |       | \-The Daily Dish | By Andrew Sullivan
+   |       \-+-NewsBusters.org - Exposing Liberal Media Bias
+   |         \-Celebrity gossip juicy celebrity rumors Hollywood gossip blog from Perez Hilton
+   \-+-The Blotter
+     \-Schneier on Security
