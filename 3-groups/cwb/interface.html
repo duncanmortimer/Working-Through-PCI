@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <title>Area Chart</title>
+    <script type="text/javascript" src="/js/protovis-r3.2.js"></script>
+    <script type="text/javascript" src="/js/jquery-1.5.min.js"></script>
+    <script type="text/javascript+protovis">
+      var w = 400,
+      h = 400,
+      x = pv.Scale.linear(0, 1).range(0, w),
+      y = pv.Scale.linear(0, 1).range(0, h),
+      c = pv.Scale.log(1, 100).range("orange", "red");
+
+      /* The root panel. */
+      var vis = new pv.Panel()
+      .canvas("fig")
+      .width(w)
+      .height(h)
+      .bottom(20)
+      .left(20)
+      .right(10)
+      .top(5);
+
+      vis.add(pv.Panel)
+      .add(pv.Dot)
+      .left(function(d) x(d.x))
+      .bottom(function(d) y(d.y))
+      .strokeStyle(function(d) c(d.x*d.y*100))
+      .fillStyle(function() this.strokeStyle().alpha(.2))
+      .size(50)
+      .title(function(d) d.y.toFixed(1));
+
+      var data = $.getJSON("/data", function(json) {
+      vis.data(json.points).root.render()
+      });
+    </script>
+    <style type="text/css">
+      body {
+      margin: 0;
+      display: table;
+      height: 100%;
+      width: 100%;
+      font: 14px/134% Helvetica Neue, sans-serif;
+      }
+
+      #center {
+      display: table-cell;
+      vertical-align: middle;
+      }
+
+      #fig {
+      position: relative;
+      margin: auto;
+      height: 500px;
+      width: 500px;
+      display: block !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="center"><div id="fig">
+    </div></div>
+  </body>
+</html>
