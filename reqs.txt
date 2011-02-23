@@ -1,3 +1,6 @@
+bottle==0.8.5
 feedparser==5.0
+ipython==0.10.1
 pydelicious==0.6
+web.py==0.34
 wsgiref==0.1.2
