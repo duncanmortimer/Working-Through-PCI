@@ -21,6 +21,17 @@ def data():
     return {"points": [{'x': random.random(),
                         'y': random.random()} for i in range(100)]}
 
+import data
+
+@route('/blogdata')
+def show():
+    counts = data.get_data('blogdata.txt')
+    return {"cols": counts[0].keys(), "counts": counts}
+
+@route('/blogmatrix')
+def index():
+    return static_file('matrix.html', root=ROOT)
+
 if __name__ == '__main__':
     debug(True)
-    run(host='localhost', port=8080)
+    run(host='localhost', port=8080, reloader=True)
