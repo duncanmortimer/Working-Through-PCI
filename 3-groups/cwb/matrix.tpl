@@ -4,7 +4,7 @@
     <script type="text/javascript" src="/js/protovis-r3.2.js"></script>
     <script type="text/javascript" src="/js/jquery-1.5.min.js"></script>
     <script type="text/javascript+protovis">
-      var JSONdata = $.ajax({ type: "GET", url: "/blogdata",
+      var JSONdata = $.ajax({ type: "GET", url: "{{data_url}}",
       async: false }).responseText;
       var data = JSON.parse(JSONdata);
       var wordcount = data.counts;

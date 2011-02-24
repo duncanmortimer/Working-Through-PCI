@@ -36,7 +36,6 @@ def cluster_hierarchy(vectors, distance=pearson_dist):
     while len(clusters) > 1:
         (left_index, right_index) = 0, 1
         closest = distance(clusters[0].vec, clusters[1].vec)
-        print "%d clusters remaining." % len(clusters)
 
         for i, ca in enumerate(clusters):
             for j, cb in enumerate(clusters[i+1:], i+1):
@@ -61,6 +60,12 @@ def cluster_hierarchy(vectors, distance=pearson_dist):
 
     return clusters[0]
 
+def cluster_list(clust):
+    if clust.id <= -1:
+        return cluster_list(clust.left) + cluster_list(clust.right)
+    else:
+        return [clust]
+
 def print_cluster(clust, labels=None, n=0):
     print ' '*n,
 
@@ -75,4 +80,3 @@ def print_cluster(clust, labels=None, n=0):
         print_cluster(clust.left, labels=labels, n=n+1)
     if clust.right != None:
         print_cluster(clust.right, labels=labels, n=n+1)
-
