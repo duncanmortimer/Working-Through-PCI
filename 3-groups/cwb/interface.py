@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from bottle import route, run, debug, static_file, template
+from bottle import route, run, debug, static_file, template, validate
 import random
 
 RESOURCES = os.path.abspath("../../resources")
@@ -55,6 +55,19 @@ def dendrodata():
 @route('/blogdendro/')
 def blogmatrix():
     return template('dendro', data_url='/dendrodata/')
+
+import kmeans
+
+@route('/data/kmeans/:k#[0-9]+#')
+@validate(k=int)
+def dendrodata(k=5):
+    rows, cols, matrix = data.get_data('blogdata.txt')
+    clusters = kmeans.cluster_kmeans(matrix, k=k)
+    return {"clusters": map(list, clusters)}
+
+@route('/blog/kmeans/:k#[0-9]+#')
+def blogmatrix(k=5):
+    return template('kmeans', data_url='/data/kmeans/'+str(int(k)))
 
 if __name__ == '__main__':
     debug(True)
