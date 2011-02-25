@@ -251,6 +251,61 @@ def kMeansCluster(rowNames, data, numClusters = 4, distance = pearsonSimilarity,
     return [multicluster(vec, children=kids) for (vec, kids) in zip(clusters, bestAssignment)]
 
 
+def scaleDown(rowNames, data, distance = pearsonSimilarity, rate = 0.01, dim = 2, maxIter = 1000):
+    """
+    Uses the multi-dimensional scaling algorithm to represent data
+    points as points in a 'dim' dimensional space (default of 2).
+    """
+    n = len(rowNames)
+
+    # The similarity between each pair of items
+    similarity = {}
+    for j in range(n):
+        for i in range(j):
+            similarity[(i,j)] = distance(data[i], data[j])
+
+    # Assign a random initial position to each item
+    pos = [[random.random() for d in range(dim)] for i in range(n)]
+    dist = {}
+
+    lastTotalError = None
+    for it in range(maxIter):
+        # Determine distance between each pair of data points
+        for j in range(n):
+            for i in range(j):
+                dist[(i,j)] = sqrt(sum([(pos[i][d]-pos[j][d])**2 for d in range(dim)]))
+
+        # Perform gradient descent
+        grad = [[0.0 for d in range(dim)] for i in range(n)]
+
+        totalError = 0.0
+        for j in range(n):
+            for i in range(j):
+                relativeError = (dist[(i,j)] - similarity[(i,j)])/similarity[(i,j)]
+                for d in range(dim):
+                    delta = (pos[j][d]-pos[i][d])/dist[(i,j)]
+                    grad[i][d] += -delta*relativeError
+                    grad[j][d] += delta*relativeError
+
+                totalError += abs(relativeError)
+        print totalError
+
+        # Check to see whether we have reached a local minimum
+        # (i.e. whether our error has increased since last move)
+        # NB: this is incorrect: should really calculate our error
+        # AFTER the move, and then revert if the error is
+        # increased...
+        if lastTotalError and lastTotalError < totalError: break
+        lastTotalError = totalError
+
+        # Move the points
+        for j in range(n):
+            for d in range(d):
+                pos[j][d] -= grad[j][d]*rate
+
+    return [(rowNames[j], pos[j]) for j in range(n)]
+
+
 def loadData(fileName):
     """loadData(fileName) -> rowNames, colNames, data
 
