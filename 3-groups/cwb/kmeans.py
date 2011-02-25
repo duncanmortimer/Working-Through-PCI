@@ -1,4 +1,5 @@
 import random
+from math import sqrt
 from groups import pearson_dist
 
 # Usage:
@@ -49,3 +50,62 @@ def cluster_kmeans(vectors, k=5, distance=pearson_dist):
                                for l in range(n)]
 
     return memberships
+
+def scaledown(data, distance=pearson_dist, rate=0.01):
+    r = len(data)
+    c = len(data[0])
+
+    # Calculate all real distances (inefficiently)
+    real_dists = [[distance(data[i], data[j]) for j in range(r)]
+                  for i in range(r)]
+
+    # Randomly allocate starting points
+    locs = [[random.random(), random.random()] for i in data]
+    fake_dists = [[0.0 for j in range(r)] for i in range(r)]
+
+    lasterror = None
+    for m in range(1000): # Stop after 1000 iteration regardless
+        print "Iteration %d" % m
+
+        # Find projected distances
+        for i in range(r):
+            for j in range(r):
+                fake_dists[i][j] = sqrt(sum([pow(locs[i][x]-locs[j][x],2)
+                                             for x in range(len(locs[i]))]))
+
+        # Move points
+        grad=[[0.0, 0.0] for i in range(r)]
+        totalerror = 0
+        for i in range(r):
+            for j in range(r):
+                if i==j: continue
+                error = (fake_dists[i][j]-real_dists[i][j])/real_dists[i][j]
+                grad[i][0] += ((locs[i][0]-locs[j][0])/fake_dists[j][i])*error
+                grad[i][1] += ((locs[i][1]-locs[j][1])/fake_dists[j][i])*error
+                totalerror += abs(error)
+
+        print "Error: %.5f" % totalerror
+        if lasterror and lasterror < totalerror: break
+        lasterror = totalerror
+
+        # Move each of the points by the learning rate times the
+        # gradient
+        for i in range(r):
+            locs[i][0] -= rate*grad[i][0]
+            locs[i][1] -= rate*grad[i][1]
+
+    return locs
+
+import json
+
+def save_scaledown(data, filename):
+    locs = scaledown(data)
+    f = file(filename, "w")
+    json.dump(locs, f)
+    f.close()
+
+def load_scaledown(filename):
+    f = file(filename, "r")
+    data = json.load(f)
+    f.close()
+    return data

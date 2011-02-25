@@ -7,34 +7,25 @@
       var JSONdata = $.ajax({ type: "GET", url: "{{data_url}}",
       async: false }).responseText;
       var data = JSON.parse(JSONdata);
-      var tree = data.tree;
+      var points = data.points,
+          min = data.minimum,
+          max = data.maximum;
+      var x = pv.Scale.linear(min,max).range(0,400),
+          y = pv.Scale.linear(min,max).range(0,400),
+          color = pv.Colors.category20();
 
       var vis = new pv.Panel()
       .canvas("fig")
-      .width(700)
-      .left(40)
-      .right(260)
-      .top(10)
-      .bottom(10);
+      .width(400)
+      .height(400)
+      .margin(20);
 
-      var layout = vis.add(pv.Layout.Cluster)
-      .nodes(pv.dom(tree)
-      .root("tree")
-      .sort(function(a, b) pv.naturalOrder(a.nodeName, b.nodeName))
-      .nodes())
-      .group(true)
-      .orient("left");
-
-      layout.link.add(pv.Line)
-      .strokeStyle("#ccc")
-      .lineWidth(1)
-      .antialias(false);
-
-      layout.node.add(pv.Dot)
-      .fillStyle(function(n) n.firstChild ? "#aec7e8" : "#ff7f0e");
-
-      layout.label.add(pv.Label)
-      .text(function(d) d.nodeValue);
+      vis.add(pv.Dot)
+      .data(points)
+      .left(function (d) x(d.x))
+      .bottom(function (d) y(d.y))
+      .fillStyle(function (d) color(d.cluster))
+      .size(20);
 
       vis.render();
     </script>
@@ -45,8 +36,8 @@
       }
 
       #fig {
-      height: 1600px;
-      width: 1000px;
+      height: 440px;
+      width: 440px;
       display: block !important;
       margin: auto;
       }
