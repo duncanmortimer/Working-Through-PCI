@@ -1,5 +1,6 @@
 from math import sqrt
 from numpy import mean
+import numpy as np
 import random
 from PIL import Image, ImageDraw
 
@@ -66,6 +67,17 @@ def pearsonSimilarity(v1,v2):
     if den>0:
         return 1.0 - num/den
     else: return 0.0
+
+def tanimotoSimilarity(v1, v2):
+    """
+    Calculate the Tanimoto similarity between vectors v1 and v2.  The
+    Tanimoto similarity measure is the ratio of the intersection of
+    the supports of the two vectors to the union of the supports of
+    the two vectors.
+    """
+    intersect = np.dot(np.array(v1),np.array(v2))
+    union = sum(v1) + sum(v2) - intersect
+    return 1.0 - float(intersect)/union
 
 
 def hierCluster(rowNames, data, distance=pearsonSimilarity, merge=lambda v1, v2: mean([v1,v2], 0)):
