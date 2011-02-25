@@ -66,6 +66,15 @@ def cluster_list(clust):
     else:
         return [clust]
 
+def cluster_dict(clust, labels=None):
+    if clust.id <= -1:
+        return {clust.left.id: cluster_dict(clust.left, labels),
+                clust.right.id: cluster_dict(clust.right, labels)}
+    elif labels is None:
+        return clust.id
+    else:
+        return labels[clust.id]
+
 def print_cluster(clust, labels=None, n=0):
     print ' '*n,
 

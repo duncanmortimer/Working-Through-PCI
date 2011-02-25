@@ -42,6 +42,20 @@ def blogdata(clustered=False):
 def blogmatrix(clustered=''):
     return template('matrix', data_url='/blogdata/'+clustered)
 
+@route('/dendrodata/')
+def dendrodata():
+    rows, cols, matrix = data.get_data('blogdata.txt')
+
+    print "Calculating clusters...",
+    tree = groups.cluster_dict(groups.cluster_hierarchy(matrix), rows)
+    print " DONE."
+
+    return {"tree": tree}
+
+@route('/blogdendro/')
+def blogmatrix():
+    return template('dendro', data_url='/dendrodata/')
+
 if __name__ == '__main__':
     debug(True)
     run(host='localhost', port=8080, reloader=True)
