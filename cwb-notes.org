@@ -8,4 +8,14 @@ metric.
 Table of scores have swapped normalized values for Lady and Luck
 columns. (Note that the missing sqrt from before makes the given
 scores wrong in any case.)
+*** Exercises
+**** Tanimoto score
+Given two sets A and B, the tanimoto score is the ratio between the
+intersection count and the union count.
+
+This can be used when the "ratings" are discrete "tags". For example,
+if users follow topics, the tanimoto score of two users' topic sets
+can be used to indicate their similarity.
+**** Tag similarity
+** Discovering Groups
 
