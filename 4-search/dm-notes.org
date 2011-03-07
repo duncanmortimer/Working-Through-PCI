@@ -1,0 +1,22 @@
+* What's in a search engine?
+** Building the collection
+- 'crawling': starting with small set of documents, and following
+  links
+- Or might already have a collection
+** Indexing
+- big table of documents, locations of different words within them
+- some way of getting to the document from its entry in the table (a
+  link, or perhaps storing document itself in the table)
+** Extracting ranked list from query
+- Simple to extract documents with a given set of words, given an
+  index
+- Challenge is to extract most *relevent* documents.  How the results
+  are sorted.
+* urllib2
+- standard python library
+- "makes it easy to download pages - just provide URL"
+* SQLite:
+- "an embedded database that is very easy to set up, and stores a
+  whole database in one file."
+- SQL for queries, so code can be easily ported to use a different
+  database.
