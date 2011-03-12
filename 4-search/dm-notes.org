@@ -72,3 +72,12 @@
 - "One of the major advantages of online applications is that they
   receive constant feedback in the form of user behaviour"
   - which link does a user choose to click on?
+* Writing the code:
+** crawler object:
+- Q: How do you write unit tests for something like crawler.crawl?  Is
+  this where a "mock object" comes in?  i.e. instead of requesting
+  pages from the web, the crawler requests them from some other
+  object?  Or is this an example of where unit testing would force you
+  to create smaller modules of behaviour just so you can test?
+  (i.e. a function that extracts links from a page; not sure what else
+  though...)
