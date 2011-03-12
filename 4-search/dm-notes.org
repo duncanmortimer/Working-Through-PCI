@@ -20,3 +20,55 @@
   whole database in one file."
 - SQL for queries, so code can be easily ported to use a different
   database.
+- Python implementation: pysqlite
+* Ranking:
+- Easy to pull documents containing given words from the database (or
+  more generally, matching some query); trick to good quality search
+  is ranking the results.
+- Give an item a "score" for its relevance to a given query; then
+  return the highest ranking scores first. (but not necessarily
+  globally sorted?  Just need to give "good enough"?)
+** Content-based ranking
+- ranking based solely on the content of a document
+- Examples:
+  - word frequency: If a doc uses one of the query words very
+    frequently, it's likely to be relevant
+  - Document location: If the query term appears e.g. near the
+    beginning of a document, it's likely to be relevant
+  - Word distance:  If a query contains multiple terms, then a
+    document is more likely to be relevant if those terms appear close
+    together in it.
+- Normalise the scores to give a number between 0 and 1; 1 being the
+  highest possible.
+- Can use several score measures, and then combine them in some
+  weighted average (or some other more complex combining procedure)
+** "Network" ranking (not sure what the appropriate term is...)
+- Trying to rank documents by their position in a larger network of
+  documents.
+- Inbound links:
+  - "A page's importance can be estimated by the number of links to it
+    from other pages"
+- PageRank algorithm:
+  - "A page's importance can be estimated by the number of links it
+    receives from other important pages."
+  - Apparently equal to the probability that someone randomly clicking
+    links will arrive at a certain page.
+- Incorporating link text:  (kind of "link valence")
+  - "will get better information from what the links to a page say
+    about it, than from the linking page itself, as site developers
+    tend to include a short description of whatever it is they are
+    linking to."
+  - IDEA: Could incorporate this into dealing with academic articles
+    by looking at the text preceding a reference to an article? How
+    could one automatically pull such text out of a PDF?
+    Alternatively, perhaps could start with PLoS and other open access
+    journals?  Similarly, html versions of articles?  How would you
+    design the "crawler" for that process?  In many ways, I'm most
+    interested in indexing and searching my personal library of
+    articles; perhaps finding articles that I don't have but should
+    --- that could be a cool use, actually: given a bunch of articles,
+    find the "closure" (for some appropriate definition of closure...)
+* Learning from users
+- "One of the major advantages of online applications is that they
+  receive constant feedback in the form of user behaviour"
+  - which link does a user choose to click on?
