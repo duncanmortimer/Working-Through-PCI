@@ -26,11 +26,11 @@ class crawler:
     # it's not present
     def getentryid(self, table, field, value, createNew = True):
         cur = self.db.execute(
-            "select rowid from %s where %s = '%s'" % (table, field, value))
+            "SELECT rowid FROM %s WHERE %s = '%s'" % (table, field, value))
         res = cur.fetchone()
         if res is None:
             if createNew:
-                cur = self.db.execute('insert into %s (%s) values ("%s")' % (table, field, value))
+                cur = self.db.execute("INSERT INTO %s (%s) VALUES ('%s')" % (table, field, value))
                 return cur.lastrowid
             else: return None
         else:
@@ -58,8 +58,8 @@ class crawler:
             word = words[idx]
             if word not in ignorewords:
                 wordid = self.getentryid('wordlist', 'word', word)
-                self.db.execute('insert into wordlocation(urlid,wordid,location) '+\
-                                'values (%d, %d, %d)' % (urlid, wordid, idx))
+                self.db.execute("INSERT INTO wordlocation(urlid,wordid,location) "+\
+                                "VALUES (%d, %d, %d)" % (urlid, wordid, idx))
 
     def gettextonly(self, soup):
         """
@@ -92,7 +92,7 @@ class crawler:
         if urlid is not None:
             # Check that there are words associated with the url
             if self.db.execute(
-                "select rowid from wordlocation where urlid = %d" % urlid
+                "SELECT rowid FROM wordlocation WHERE urlid = %d" % urlid
                 ).fetchone() is not None:
                 return True
         return False
@@ -136,18 +136,18 @@ class crawler:
         """
         # Note: Each table has a field 'rowid' by default in sqlite,
         # in addition to the named fields.
-        self.db.execute('create table urllist(url)')
-        self.db.execute('create table wordlist(word)')
-        self.db.execute('create table wordlocation(urlid, wordid, location)')
-        self.db.execute('create table linkwords(wordid, linkid)')
-        self.db.execute('create table link(fromid, toid)')
+        self.db.execute("CREATE TABLE urllist(url)")
+        self.db.execute("CREATE TABLE wordlist(word)")
+        self.db.execute("CREATE TABLE wordlocation(urlid, wordid, location)")
+        self.db.execute("CREATE TABLE linkwords(wordid, linkid)")
+        self.db.execute("CREATE TABLE link(fromid, toid)")
         # From wikipedia: "an index is a data structure that increases
         # the speed of access for elements in a database, at the cost
         # of slower writes and increased storage space."
-        self.db.execute('create index wordidx on wordlist(word)')
-        self.db.execute('create index urlidx on urllist(url)')
-        self.db.execute('create index wordurlidx on wordlocation(wordid)')
-        self.db.execute('create index urltoidx on link(toid)')
-        self.db.execute('create index urlfromidx on link(fromid)')
+        self.db.execute("CREATE INDEX wordidx ON wordlist(word)")
+        self.db.execute("CREATE INDEX urlidx ON urllist(url)")
+        self.db.execute("CREATE INDEX wordurlidx ON wordlocation(wordid)")
+        self.db.execute("CREATE INDEX urltoidx ON link(toid)")
+        self.db.execute("CREATE INDEX urlfromidx ON link(fromid)")
 
         self.dbcommit()

@@ -34,7 +34,7 @@ class Test(unittest.TestCase):
         c = searchengine.crawler("test.db")
         idx = c.getentryid("wordlist","word","test")
         self.assertEqual(idx, c.db.execute(
-            'select rowid from wordlist where word="test"'
+            "SELECT rowid FROM wordlist WHERE word='test'"
             ).fetchone()[0])
 
     def test_getentryid_dontcreatenew(self):
@@ -49,7 +49,7 @@ class Test(unittest.TestCase):
         """Test crawler.getentryid: If entry exists,
         return its rowid."""
         c = searchengine.crawler("test.db")
-        c.db.execute("insert into wordlist(rowid, word) values (10,'test')")
+        c.db.execute("INSERT INTO wordlist(rowid, word) VALUES (10,'test')")
         idx = c.getentryid("wordlist","word","test")
         self.assertEqual(idx, 10)
 
@@ -64,7 +64,7 @@ class Test(unittest.TestCase):
         there are no words associated with the url, assume it has been
         indexed incorrectly and return False."""
         c = searchengine.crawler("test.db")
-        c.db.execute("insert into urllist (url) values ('http://www.someurl.com')")
+        c.db.execute("INSERT INTO urllist (url) VALUES ('http://www.someurl.com')")
         self.assertFalse(c.isindexed("http://www.someurl.com"))
 
     def test_isindexed_urlpresentwithwords(self):
@@ -72,9 +72,9 @@ class Test(unittest.TestCase):
         there are words in wordlist associated with that url, return True."""
         c = searchengine.crawler("test.db")
         urlid = c.db.execute(
-            "insert into urllist (url) values ('http://www.someurl.com')").lastrowid
-        wordid = c.db.execute("insert into wordlist (word) values ('test')").lastrowid
-        c.db.execute("insert into wordlocation (urlid, wordid, location) values (%d, %d, 1)" % (urlid, wordid))
+            "INSERT INTO urllist (url) VALUES ('http://www.someurl.com')").lastrowid
+        wordid = c.db.execute("INSERT INTO wordlist (word) VALUES ('test')").lastrowid
+        c.db.execute("INSERT INTO wordlocation (urlid, wordid, location) VALUES (%d, %d, 1)" % (urlid, wordid))
         self.assertTrue(c.isindexed("http://www.someurl.com"))
 
 

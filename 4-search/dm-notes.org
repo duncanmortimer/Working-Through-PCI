@@ -81,3 +81,25 @@
   to create smaller modules of behaviour just so you can test?
   (i.e. a function that extracts links from a page; not sure what else
   though...)
+** Toby Segaran's searchindex.db; weird behaviour?
+- pg 62: suggests downloading his searchindex.db, loading it up and testing it using:
+  [row for rowid in crawler.db.execute('select rowid from wordlocation where wordid=1')]
+- In theory, should give some particular result (given in the book)
+- I get a different result; trying to trace down the issue, I first of
+  all looked at what word was associated with rowid=1 --> I got
+  'doctype'; Toby Segaran mentions that it should be "word"
+- And indeed, when I pull out the rowid for 'word', I get 1.
+- But I also get 2, 3, 4, ... --- in other words, matching
+  'word="word"' pulls out everything in the table!  WHY?!
+- One hypothesis is that it's because word is also the name of the
+  column... in which case I should get the same result doing
+  word='rowid'?  Nope: get nothing
+- what about rowid='rowid'? YES: in that case, I pull out everything.
+  Similarly, if I try different kinds of capitalisation for the entry;
+  i.e. rowid="RoWiD" etc.
+- This capitalisation thing doesn't do anything if you're not trying
+  to match the column name as the value.
+- AHAH: it is dependent on whether you use single or double quotes in
+  the SQL string --- single quotes work, but double quotes seem to
+  treat the query as matching entries or column names.  Very strange
+  behaviour if you ask me... :-/
