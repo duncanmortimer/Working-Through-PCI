@@ -8,25 +8,50 @@ class Test(unittest.TestCase):
     """
 
     def test_gettextonly_notags(self):
-        """Test searchengine.crawler.gettextonly(soup): a string with no tags"""
+        """Test searchengine.crawler.gettextonly: a string with no tags"""
         s = "Just a string."
         soup = BeautifulSoup(s)
         c = searchengine.crawler("")
         self.assertEqual(c.gettextonly(soup), s)
 
     def test_gettextonly_singletag(self):
-        """Test searchengine.crawler.gettextonly(soup): a single html tag"""
+        """Test searchengine.crawler.gettextonly: a single html tag"""
         html = "<html>some text</html>"
         soup = BeautifulSoup(html)
         c = searchengine.crawler("")
         self.assertEqual(c.gettextonly(soup), "some text")
 
     def test_gettextonly_nestedtag(self):
-        """Test searchengine.crawler.gettextonly(soup): nested html tags"""
+        """Test searchengine.crawler.gettextonly: nested html tags"""
         html = "<ul><li>list item 1</li><li>list item 2</li></ul>"
         soup = BeautifulSoup(html)
         c = searchengine.crawler("")
         self.assertEqual(c.gettextonly(soup), "list item 1\nlist item 2")
+
+    def test_getentryid_createnew(self):
+        """Test searchengine.crawler.getentryid: default behaviour
+        when requesting a nonexistent database entry is to insert."""
+        c = searchengine.crawler("test.db")
+        idx = c.getentryid("wordlist","word","test")
+        self.assertEqual(idx, c.db.execute(
+            'select rowid from wordlist where word="test"'
+            ).fetchone()[0])
+
+    def test_getentryid_dontcreatenew(self):
+        """Test searchengine.crawler.getentryid: if requested not to
+        create a new entry when a matching entry does not exist, then
+        idx should be None."""
+        c = searchengine.crawler("test.db")
+        idx = c.getentryid("wordlist","word","test",createNew = False)
+        self.assertTrue(idx is None)
+
+    def test_getentryid_fetch(self):
+        """Test searchengine.crawler.getentryid: If entry exists,
+        return its rowid."""
+        c = searchengine.crawler("test.db")
+        c.db.execute("insert into wordlist(rowid, word) values (10,'test')")
+        idx = c.getentryid("wordlist","word","test")
+        self.assertEqual(idx, 10)
 
     def test_separatewords(self):
         """Test searchengine.crawler.separatewords(text)."""

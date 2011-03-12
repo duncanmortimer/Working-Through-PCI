@@ -24,14 +24,43 @@ class crawler:
 
     # Auxiliary functions for getting an entry id and adding it if
     # it's not present
-    def getentryid(self, table, field, value, createnew = True):
-        return None
+    def getentryid(self, table, field, value, createNew = True):
+        print "query text: select rowid from %s where %s = '%s'" % (table, field, value)
+        cur = self.db.execute(
+            "select rowid from %s where %s = '%s'" % (table, field, value))
+        res = cur.fetchone()
+        if res is None:
+            if createNew:
+                cur = self.db.execute('insert into %s (%s) values ("%s")' % (table, field, value))
+                return cur.lastrowid
+            else: return None
+        else:
+            return res[0]
+
 
     def addtoindex(self, url, soup):
         """
         Index an individual page.
         """
+        if self.isindexed(url): return # this occurs if a url is
+                                        # linked to multiple times
+                                        # from the page in which it is
+                                        # first encountered...
+
         print 'Indexing %s' % url
+
+        words = self.separatewords(self.gettextonly(soup))
+
+        # Add the url to the database and get its id
+        urlid = self.getentryid('urllist', 'url', url)
+
+        # Link each word to the url
+        for idx in range(len(words)):
+            word = words[idx]
+            if word not in ignorewords:
+                wordid = self.getentryid('wordlist', 'word', word)
+                self.db.execute('insert into wordlocation(urlid,wordid,location) '+\
+                                'values (%d, %d, %d)' % (urlid, wordid, idx))
 
     def gettextonly(self, soup):
         """
