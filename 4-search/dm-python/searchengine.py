@@ -25,7 +25,6 @@ class crawler:
     # Auxiliary functions for getting an entry id and adding it if
     # it's not present
     def getentryid(self, table, field, value, createNew = True):
-        print "query text: select rowid from %s where %s = '%s'" % (table, field, value)
         cur = self.db.execute(
             "select rowid from %s where %s = '%s'" % (table, field, value))
         res = cur.fetchone()
@@ -89,6 +88,13 @@ class crawler:
         """
         Return True if this url is already indexed
         """
+        urlid = self.getentryid("urllist","url",url,createNew = False)
+        if urlid is not None:
+            # Check that there are words associated with the url
+            if self.db.execute(
+                "select rowid from wordlocation where urlid = %d" % urlid
+                ).fetchone() is not None:
+                return True
         return False
 
     def addlinkref(self, urlFrom, urlTo, linkText):
