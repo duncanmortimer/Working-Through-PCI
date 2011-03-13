@@ -126,3 +126,19 @@
 - Disadvantage might be that I'd need to think through the higher
   level db operations I'd want to support; otherwise, why not just use
   SQL?
+** Current strategy for querying doesn't scale very well
+- The strategy for querying taken by Toby Segaran involves first
+  constructing a tuple for each possible combination of term positions
+  in each url containing all the terms (i.e. using
+  searcher.getmatchrows()).
+- This leads to a combinatorial explosion when searching for e.g. a
+  combination of words that tend to occur together many times in a
+  document.  For example, "functional programming" produces 13786 such
+  combinations, but "functional programming haskell" produces 96023,
+  and takes a long time!
+- To get around this, perhaps the best way would be first to pull out
+  the list of all pages containing all the terms, and then for each
+  page pull out the list of word locations.
+- This then pushes the efficiency issue onto the scoring code (though
+  presumably some of that code could be made much more efficient using
+  this method).
