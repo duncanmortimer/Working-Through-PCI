@@ -103,3 +103,26 @@
   the SQL string --- single quotes work, but double quotes seem to
   treat the query as matching entries or column names.  Very strange
   behaviour if you ask me... :-/
+- Now I get it: in sql, double quotes surround entire sql statements,
+  so word="word" was like saying "pull out everything that matches
+  anything in the word column"!
+- So now I need to go back and fix up the stuff in searchengine.py, to
+  make sure I don't use double quotes!
+- Though note: while this explains why I was getting weird results
+  when trying to work out why Toby's db doesn't give the results
+  listed in his book, it doesn't explain why Toby's db doesn't give
+  the results in his book!  Maybe the db has changed?
+** Refactoring: Split database handling nito a separate object
+- It seems to me that the code for this chapter could be improved by
+  splitting out the database interaction code into a different object,
+  leaving the crawler code to just do the actual "crawling"
+  functionality, and the searcher code to focus on ranking and
+  supporting higher level search commands.
+- I *think* this would be an example of "separation of concerns" and
+  the principal that each object should do "just one thing".
+- It would also make things easier to test, as I could test the db
+  code separately, and create a mock database for testing the
+  searcher.
+- Disadvantage might be that I'd need to think through the higher
+  level db operations I'd want to support; otherwise, why not just use
+  SQL?
