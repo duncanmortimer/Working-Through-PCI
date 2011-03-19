@@ -141,6 +141,45 @@ class crawler:
                 self.dbcommit()
             pages = newpages
 
+    def calculatepagerank(self, iterations):
+        """
+        Adds a table to the database containing the estimated PageRank
+        for each url.
+        """
+        # Remove any pre-existing PageRank tables
+        self.db.execute("DROP TABLE IF EXISTS pagerank")
+        self.db.execute("CREATE TABLE pagerank(urlid PRIMARY KEY, score)")
+
+        # Initialise every URL with a PageRank of 1.0
+        self.db.execute("INSERT INTO pagerank(urlid, score) " +\
+                        "SELECT rowid, 1.0 FROM urllist")
+        self.db.commit()
+
+        for i in range(iterations):
+            print "Iteration %d" % i
+            for (urlid,) in self.db.execute('SELECT rowid FROM urllist'):
+                pr = 0.15
+
+                # Loop through all urls that link to this one
+                for (fromid,) in self.db.execute('SELECT fromid FROM link ' +\
+                                                 'WHERE toid=%d' % urlid):
+                    # Get PageRank of linking page
+                    fromPageRank = self.db.execute(
+                        'SELECT score FROM pagerank '+\
+                        'WHERE urlid=%d' % fromid).fetchone()[0]
+
+                    # Get the total number of links from the linking page
+                    numLinks = self.db.execute(
+                        'SELECT COUNT(*) FROM link '+\
+                        'WHERE fromid=%d' % fromid).fetchone()[0]
+
+                    # Update PageRank
+                    pr += 0.85 * (fromPageRank/numLinks)
+                # Update PageRank table
+                self.db.execute(
+                    'UPDATE pagerank SET score=%f WHERE urlid=%d' % (pr, urlid))
+            self.db.commit()
+
     def createindextables(self):
         """
         Create the database tables
@@ -183,27 +222,27 @@ class searcher:
         for word in words:
             # Get the word ID
             wordrow=self.db.execute(
-                "select rowid from wordlist where word='%s'" % word).fetchone()
+                "SELECT rowid FROM wordlist WHERE word='%s'" % word).fetchone()
             if wordrow!=None:
                 wordid=wordrow[0]
                 wordids.append(wordid)
                 if tablenumber>0:
                     tablelist+=','
-                    clauselist+=' and '
+                    clauselist+=' AND '
                     clauselist+='w%d.urlid=w%d.urlid and ' % (tablenumber-1,tablenumber)
                 fieldlist+=',w%d.location' % tablenumber
                 tablelist+='wordlocation w%d' % tablenumber
                 clauselist+='w%d.wordid=%d' % (tablenumber,wordid)
                 tablenumber+=1
         # Create the query from the separate parts
-        fullquery='select %s from %s where %s' % (fieldlist,tablelist,clauselist)
+        fullquery='SELECT %s FROM %s WHERE %s' % (fieldlist,tablelist,clauselist)
         cur=self.db.execute(fullquery)
         rows=[row for row in cur]
         return rows,wordids
 
     def geturlname(self,id):
         return self.db.execute(
-            "select url from urllist where rowid=%d" % id).fetchone()[0]
+            "SELECT url FROM urllist WHERE rowid=%d" % id).fetchone()[0]
 
     def query(self,q):
         rows,wordids=self.getmatchrows(q)
@@ -248,17 +287,26 @@ class searcher:
     def inboundlinkscore(self,rows):
         uniqueurls=set([row[0] for row in rows])
         inboundcount=dict([(u,self.db.execute( \
-            'select count(*) from link where toid=%d' % u).fetchone()[0]) \
+            'SELECT COUNT(*) FROM link WHERE toid=%d' % u).fetchone()[0]) \
             for u in uniqueurls])
         return self.normalizescores(inboundcount)
+
+    def pagerankscore(self,rows):
+        pageranks=dict([(row[0],
+            self.db.execute('SELECT score FROM pagerank WHERE urlid=%d' % row[0]
+            ).fetchone()[0]) for row in rows])
+        maxrank=max(pageranks.values())
+        normalizedscores=dict([(u,float(l)/maxrank) for (u,l) in pageranks.items()])
+        return normalizedscores
 
     def getscoredlist(self,rows,wordids):
         totalscores=dict([(row[0],0) for row in rows])
         # This is where you'll later put the scoring functions
-        weights=[(0.0,self.frequencyscore(rows)),
-                 (0.0, self.locationscore(rows)),
+        weights=[(1.0,self.frequencyscore(rows)),
+                 (1.0, self.locationscore(rows)),
 #                 (0.0, self.distancescore(rows)),
-                 (1.0, self.inboundlinkscore(rows))]
+                 (0.0, self.inboundlinkscore(rows)),
+                 (1.0, self.pagerankscore(rows))]
         for (weight,scores) in weights:
             for url in totalscores:
                 totalscores[url]+=weight*scores[url]

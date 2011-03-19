@@ -144,3 +144,10 @@
   this method).
 * Errata:
 - pg 56,57: Code for "addlinkref" is not given.
+- pg 70,71: I suspect that the pagerank calculation algorithm he gives
+  is susceptible to bias, as it traverses the pages in the same order
+  on every iteration.  One way around this might be to do the update
+  synchronously (i.e. go through all the pages and calculate the
+  updated pagerank, and only change the pagerank value given in the db
+  after all have been calculated).  Should be possible to prove
+  whether or not order matters?
