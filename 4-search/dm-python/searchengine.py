@@ -299,14 +299,33 @@ class searcher:
         normalizedscores=dict([(u,float(l)/maxrank) for (u,l) in pageranks.items()])
         return normalizedscores
 
+    def linktextscore(self,rows,wordids):
+        linkscores=dict([(row[0],0) for row in rows])
+        for wordid in wordids:
+            cur=self.db.execute('SELECT link.fromid,link.toid FROM linkwords,link ' +\
+                'WHERE wordid=%d AND linkwords.linkid=link.rowid' % wordid)
+            for (fromid,toid) in cur:
+                if toid in linkscores:
+                    pr=self.db.execute(
+                        'SELECT score FROM pagerank WHERE urlid=%d' % fromid
+                        ).fetchone()[0]
+                    linkscores[toid]+=pr
+        maxscore=max(linkscores.values())
+        if maxscore > 0:
+            normalizedscores=dict([(u,float(l)/maxscore) for (u,l) in linkscores.items()])
+        else:
+            normalizedscores = linkscores
+        return normalizedscores
+
     def getscoredlist(self,rows,wordids):
         totalscores=dict([(row[0],0) for row in rows])
         # This is where you'll later put the scoring functions
-        weights=[(1.0,self.frequencyscore(rows)),
-                 (1.0, self.locationscore(rows)),
-#                 (0.0, self.distancescore(rows)),
+        weights=[(0.0,self.frequencyscore(rows)),
+                 (0.5, self.locationscore(rows)),
+                 (1.0, self.distancescore(rows)),
                  (0.0, self.inboundlinkscore(rows)),
-                 (1.0, self.pagerankscore(rows))]
+                 (1.0, self.pagerankscore(rows)),
+                 (0.0, self.linktextscore(rows, wordids))]
         for (weight,scores) in weights:
             for url in totalscores:
                 totalscores[url]+=weight*scores[url]

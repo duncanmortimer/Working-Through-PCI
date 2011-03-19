@@ -151,3 +151,6 @@
   updated pagerank, and only change the pagerank value given in the db
   after all have been calculated).  Should be possible to prove
   whether or not order matters?
+- pg 73: Code as given will not handle queries containing words that
+  don't appear in any links (normalisation throws a divide-by-zero
+  error)
