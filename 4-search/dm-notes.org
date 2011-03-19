@@ -142,3 +142,5 @@
 - This then pushes the efficiency issue onto the scoring code (though
   presumably some of that code could be made much more efficient using
   this method).
+* Errata:
+- pg 56,57: Code for "addlinkref" is not given.

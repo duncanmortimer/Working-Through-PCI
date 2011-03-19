@@ -102,7 +102,17 @@ class crawler:
         """
         Add a link between two pages
         """
-        pass
+
+        words = self.separatewords(linkText)
+        urlFromId = self.getentryid('urllist', 'url', urlFrom)
+        urlToId = self.getentryid('urllist', 'url', urlTo)
+        linkId = self.db.execute("INSERT INTO link(fromid, toid) "+\
+                                 "VALUES (%d, %d)" % (urlFromId, urlToId)).lastrowid
+        for word in words:
+            if word not in ignorewords:
+                wordId = self.getentryid('wordlist', 'word', word)
+                self.db.execute("INSERT INTO linkwords(wordid, linkid) "+\
+                                "VALUES (%d, %d)" % (wordId, linkId))
 
     def crawl(self, pages, depth = 2):
         """
@@ -235,12 +245,20 @@ class searcher:
             if dist<mindistance[row[0]]: mindistance[row[0]]=dist
         return self.normalizescores(mindistance,smallIsBetter=1)
 
+    def inboundlinkscore(self,rows):
+        uniqueurls=set([row[0] for row in rows])
+        inboundcount=dict([(u,self.db.execute( \
+            'select count(*) from link where toid=%d' % u).fetchone()[0]) \
+            for u in uniqueurls])
+        return self.normalizescores(inboundcount)
+
     def getscoredlist(self,rows,wordids):
         totalscores=dict([(row[0],0) for row in rows])
         # This is where you'll later put the scoring functions
         weights=[(0.0,self.frequencyscore(rows)),
                  (0.0, self.locationscore(rows)),
-                 (1.0, self.distancescore(rows))]
+#                 (0.0, self.distancescore(rows)),
+                 (1.0, self.inboundlinkscore(rows))]
         for (weight,scores) in weights:
             for url in totalscores:
                 totalscores[url]+=weight*scores[url]
