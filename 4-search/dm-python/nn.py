@@ -1,8 +1,8 @@
 from pysqlite2 import dbapi2 as sqlite
 from numpy import array, tanh
 
-def dtanh(x):
-    return 1.0 - tanh(x)*tanh(x)
+def dtanh(y):
+    return 1.0 - y*y
 
 class searchnet:
     def __init__(self, dbname):
@@ -132,7 +132,7 @@ class searchnet:
 
 
 def setup_test_db():
-    nn = searchnet('nn.db')
+    nn = searchnet('testnn.db')
     nn.db.execute('DROP TABLE IF EXISTS hiddennode')
     nn.db.execute('DROP TABLE IF EXISTS wordhidden')
     nn.db.execute('DROP TABLE IF EXISTS hiddenurl')
