@@ -164,3 +164,4 @@
 - pg 73: Code as given will not handle queries containing words that
   don't appear in any links (normalisation throws a divide-by-zero
   error)
+- pg 81: The derivative of tanh(x) is 1.0 - tanh(x)^2, not 1.0-x^2
