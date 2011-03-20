@@ -3,8 +3,10 @@ import re
 from BeautifulSoup import *
 from urlparse import urljoin
 from pysqlite2 import dbapi2 as sqlite
+import nn
 
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
+searchnet = nn.searchnet('nn.db')
 
 class crawler:
     def __init__(self, dbname):
@@ -248,8 +250,9 @@ class searcher:
         rows,wordids=self.getmatchrows(q)
         scores=self.getscoredlist(rows,wordids)
         rankedscores=sorted([(score,url) for (url,score) in scores.items()],reverse=1)
-        for (score,urlid) in rankedscores[0:10]:
-            print '%f\t%s' % (score,self.geturlname(urlid))
+        return wordids,\
+               [r[0] for r in rankedscores[0:10]],\
+               [r[1] for r in rankedscores[0:10]]
 
     def normalizescores(self,scores,smallIsBetter=0):
         vsmall=0.00001 # Avoid division by zero errors
@@ -317,6 +320,13 @@ class searcher:
             normalizedscores = linkscores
         return normalizedscores
 
+    def nnscore(self, rows, wordids):
+        urlids = [urlid for urlid in set([row[0] for row in rows])]
+        nnres = searchnet.getresults(wordids, urlids)
+        scores = dict([(urlids[i], nnres[i]) for i in range(len(urlids))])
+        return self.normalizescores(scores)
+
+
     def getscoredlist(self,rows,wordids):
         totalscores=dict([(row[0],0) for row in rows])
         # This is where you'll later put the scoring functions
@@ -331,3 +341,20 @@ class searcher:
                 totalscores[url]+=weight*scores[url]
         return totalscores
 
+def testSearch():
+    s = searcher('searchindex.db')
+    done = False
+    while not done:
+        q = raw_input("Enter query:")
+        wordids, scores, urls = s.query(q)
+        if len(urls) > 0:
+            nnres = searchnet.getresults(wordids, urls)
+            for ind in range(len(urls)):
+                print "%d: (%f:%f) %s" % (ind, scores[ind], nnres[ind], s.geturlname(urls[ind]))
+            choice = raw_input("\nSelect choice:")
+            choice = int(choice)
+            if choice in range(len(urls)):
+                print "Your choice was: %s" % s.geturlname(urls[choice])
+                searchnet.trainquery(wordids, urls, urls[choice])
+            else:
+                done = True

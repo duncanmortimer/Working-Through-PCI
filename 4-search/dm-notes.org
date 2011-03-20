@@ -72,6 +72,16 @@
 - "One of the major advantages of online applications is that they
   receive constant feedback in the form of user behaviour"
   - which link does a user choose to click on?
+** Questions:
+- pg 77: Why not insert a hidden node when there are more than 3 terms
+  in the search query?  Is it because we don't want to learn from
+  unspecific queries?
+- pg 79: Seems like some really strange design choices here... i.e. I
+  don't understand why the author sets up the network in one function,
+  then does the feedforward calculation in the next --- any updating
+  (through backprop) is going to have to do searches through the
+  database again, so why bother?  or alternatively, why not store the
+  hidden node ids as well?
 * Writing the code:
 ** crawler object:
 - Q: How do you write unit tests for something like crawler.crawl?  Is
@@ -154,3 +164,4 @@
 - pg 73: Code as given will not handle queries containing words that
   don't appear in any links (normalisation throws a divide-by-zero
   error)
+- pg 81: The derivative of tanh(x) is 1.0 - tanh(x)^2, not 1.0-x^2
